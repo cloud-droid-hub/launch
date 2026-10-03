@@ -2263,16 +2263,22 @@ Java_com_xff_launch_detector_NativeDetector_getAnonymousRwxDetails(JNIEnv *env, 
  * @return Average time per call in nanoseconds
  */
 JNIEXPORT jlong JNICALL
-Java_com_xff_launch_detector_NativeDetector_benchmarkSyscallOpenat(JNIEnv *env, jobject thiz, jint iterations) {
-    return (jlong)benchmark_syscall_openat(iterations);
+benchRawJNI(JNIEnv *env, jobject thiz, jint iterations)
+    __asm__("Java_com_xff_launch_detector_NativeDetector_benchmarkSyscallOpenat");
+JNIEXPORT jlong JNICALL
+benchRawJNI(JNIEnv *env, jobject thiz, jint iterations) {
+    return (jlong)benchOpenRaw(iterations);
 }
 
 /**
  * Benchmark openat() libc timing
  */
 JNIEXPORT jlong JNICALL
-Java_com_xff_launch_detector_NativeDetector_benchmarkLibcOpenat(JNIEnv *env, jobject thiz, jint iterations) {
-    return (jlong)benchmark_libc_openat(iterations);
+benchLibJNI(JNIEnv *env, jobject thiz, jint iterations)
+    __asm__("Java_com_xff_launch_detector_NativeDetector_benchmarkLibcOpenat");
+JNIEXPORT jlong JNICALL
+benchLibJNI(JNIEnv *env, jobject thiz, jint iterations) {
+    return (jlong)benchOpenLib(iterations);
 }
 
 /**

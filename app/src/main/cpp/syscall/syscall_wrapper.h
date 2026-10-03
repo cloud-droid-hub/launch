@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <string>
+#include <vector>
 
 // Architecture-specific syscall number compatibility
 // These are fallback definitions in case <sys/syscall.h> doesn't provide them
@@ -293,20 +294,24 @@ static inline long long get_monotonic_time_ns() {
  * @param iterations Number of times to call the syscall
  * @return Average time per call in nanoseconds
  */
-static inline long long benchmark_syscall_openat(int iterations) {
+static inline long long benchOpenRaw(int iterations) {
+    if (iterations <= 0) return 0;
     const char* dummy_path = "/dev/null";
+    std::vector<int> fds(static_cast<size_t>(iterations), -1);
 
     long long start = get_monotonic_time_ns();
 
     for (int i = 0; i < iterations; i++) {
         // Direct syscall - should be very fast (~100-500ns)
-        syscall_raw(__NR_openat, AT_FDCWD, (long)dummy_path, O_RDONLY, 0);
-        // Note: We intentionally don't check return value or close fd
-        // to minimize measurement overhead
+        fds[i] = static_cast<int>(syscall_raw(__NR_openat, AT_FDCWD, (long)dummy_path, O_RDONLY, 0));
     }
 
     long long end = get_monotonic_time_ns();
     long long total_time = end - start;
+
+    for (int fd : fds) {
+        if (fd >= 0) syscall_close(fd);
+    }
 
     return total_time / iterations;  // Average time per call
 }
@@ -318,18 +323,24 @@ static inline long long benchmark_syscall_openat(int iterations) {
  * @param iterations Number of times to call the function
  * @return Average time per call in nanoseconds
  */
-static inline long long benchmark_libc_openat(int iterations) {
+static inline long long benchOpenLib(int iterations) {
+    if (iterations <= 0) return 0;
     const char* dummy_path = "/dev/null";
+    std::vector<int> fds(static_cast<size_t>(iterations), -1);
 
     long long start = get_monotonic_time_ns();
 
     for (int i = 0; i < iterations; i++) {
         // Call through libc - can be hooked by Frida/Xposed
-        open(dummy_path, O_RDONLY);
+        fds[i] = open(dummy_path, O_RDONLY);
     }
 
     long long end = get_monotonic_time_ns();
     long long total_time = end - start;
+
+    for (int fd : fds) {
+        if (fd >= 0) close(fd);
+    }
 
     return total_time / iterations;
 }
