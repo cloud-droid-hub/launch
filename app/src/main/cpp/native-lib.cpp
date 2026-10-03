@@ -857,7 +857,7 @@ Java_com_xff_launch_detector_NativeDetector_memWriteTimingCycles(JNIEnv *env, jo
         for (size_t i = 0; i < npages; i++) buf[i * (size_t) pg] = (char) r;
     asm volatile("mrs %0, cntvct_el0" : "=r"(t1));
 #else
-    // 非 arm64:用 clock_gettime(纳秒)兜底(单位不同,信息性)
+    // 非arm64使用clock_gettime纳秒值，单位与计数器不同。
     struct timespec ts0, ts1;
     clock_gettime(CLOCK_MONOTONIC, &ts0);
     for (int r = 0; r < 100; r++)
@@ -983,7 +983,7 @@ Java_com_xff_launch_detector_NativeDetector_getVisitClassLoadersReport(JNIEnv *e
             "_ZNK3art11ClassLinker17VisitClassLoadersEPNS_18ClassLoaderVisitorE",
             "_ZN3art11ClassLinker17VisitClassLoadersEPNS_18ClassLoaderVisitorE",
     };
-    // GetDescriptor(std::string*):std::__1 替换索引 NS2_/NS3_ 因工具链而异,多候选兜底
+    // GetDescriptor的std::__1替换索引因工具链不同，依次查询NS2_及NS3_候选。
     static const char *kDescCands[] = {
             "_ZN3art6mirror5Class13GetDescriptorEPNSt3__112basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE",
             "_ZN3art6mirror5Class13GetDescriptorEPNSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE",
